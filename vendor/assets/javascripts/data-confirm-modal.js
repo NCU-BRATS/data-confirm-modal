@@ -38,9 +38,9 @@
   var defaults = {
     title: 'Are you sure?',
     commit: 'Confirm',
-    commitClass: 'btn-danger',
+    commitClass: 'red',
     cancel: 'Cancel',
-    cancelClass: 'btn-default',
+    cancelClass: '',
     fade: true,
     verifyClass: '',
     elements: ['a[data-confirm]', 'button[data-confirm]', 'input[type=submit][data-confirm]'],
@@ -64,7 +64,7 @@
       var modal = buildModal (options);
 
       modal.modal('show');
-      modal.on('hidden.bs.modal', function () {
+      modal.on('hidden', function () {
         modal.remove();
       });
 
@@ -117,29 +117,23 @@
 
   var buildModal = function (options) {
     var id = 'confirm-modal-' + String(Math.random()).slice(2, -1);
-    var fade = settings.fade ? 'fade' : '';
+    var fade = settings.fade ? '' : 'active';
 
     var modal = $(
-      '<div id="'+id+'" class="modal '+fade+'" tabindex="-1" role="dialog" aria-labelledby="'+id+'Label" aria-hidden="true">' +
-        '<div class="modal-dialog">' +
-          '<div class="modal-content">' +
-            '<div class="modal-header">' +
-              '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
-              '<h4 id="'+id+'Label" class="modal-title"></h4> ' +
-            '</div>' +
-            '<div class="modal-body"></div>' +
-            '<div class="modal-footer">' +
-              '<button class="btn cancel" data-dismiss="modal" aria-hidden="true"></button>' +
-              '<button class="btn commit"></button>' +
-            '</div>'+
-          '</div>'+
-        '</div>'+
+      '<div id="'+id+'" class="ui ' + fade + ' small modal">' +
+        '<i class="close icon"></i>' +
+        '<div id="'+id+'Label" class="header"></div>' +
+        '<div class="content"></div>' +
+        '<div class="actions">' +
+          '<button class="ui button cancel">' +
+          '<button class="ui button commit">' +
+        '</div>' +
       '</div>'
     );
 
     // Make sure it's always the top zindex
     var highest = current = 1050;
-    $('.modal.in').not('#'+id).each(function() {
+    $('.modal').not('#'+id).each(function() {
       current = parseInt($(this).css('z-index'), 10);
       if(current > highest) {
         highest = current
@@ -147,9 +141,9 @@
     });
     modal.css('z-index', parseInt(highest) + 1);
 
-    modal.find('.modal-title').text(options.title || settings.title);
+    modal.find('.header').text(options.title || settings.title);
 
-    var body = modal.find('.modal-body');
+    var body = modal.find('.content');
 
     $.each((options.text||'').split(/\n{2}/), function (i, piece) {
       body.append($('<p/>').html(piece));
@@ -180,11 +174,13 @@
         isMatch = function (input) { return options.verify == input };
       }
 
+      var verificationContainer = $('<div class="ui input">')
+
       var verification = $('<input/>', {"type": 'text', "class": settings.verifyClass}).on('keyup', function () {
         commit.prop('disabled', !isMatch($(this).val()));
       });
 
-      modal.on('shown', function () {
+      modal.on('visible', function () {
         verification.focus();
       });
 
@@ -195,7 +191,8 @@
       if (options.verifyLabel)
         body.append($('<p>', {text: options.verifyLabel}))
 
-      body.append(verification);
+      verificationContainer.append(verification);
+      body.append(verificationContainer);
     }
 
     var focus_element;
@@ -208,7 +205,7 @@
     }
     focus_element = modal.find('.' + focus_element);
 
-    modal.on('shown.bs.modal', function () {
+    modal.on('visible', function () {
       focus_element.focus();
     });
 
